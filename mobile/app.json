@@ -27,13 +27,9 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
       ],
-      "package": "com.amitkumar23.mobile"
+      "package": "com.game.fitnessgame"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -63,6 +59,11 @@
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "a4030a00-7bce-4bae-9d84-9fcbd6ab84bb"
+      }
+    }
   }
 }
