@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Alert, ActivityIndicator, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
@@ -106,6 +106,7 @@ export const LoginScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
+        <Image source={require('../../../../assets/icon.png')} style={styles.logo} />
         <Text style={styles.title}>{isLogin ? 'Welcome Back' : 'Create Account'}</Text>
         
         <TextInput 
@@ -170,6 +171,13 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    alignSelf: 'center',
+    marginBottom: 20,
+    borderRadius: 20,
   },
   title: {
     fontSize: 28,
