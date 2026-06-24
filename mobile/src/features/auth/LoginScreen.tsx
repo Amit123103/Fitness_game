@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import auth from '@react-native-firebase/auth';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../services/firebaseConfig';
 import api from '../../services/api';
 import { useUserStore } from '../../store/useUserStore';
 
@@ -16,19 +16,11 @@ export const LoginScreen = () => {
   const updateProfile = useUserStore((state) => state.updateProfile);
   const updateStats = useUserStore((state) => state.updateStats);
 
-  useEffect(() => {
-    // Note: You must replace the EXPO_PUBLIC_WEB_CLIENT_ID inside mobile/.env
-    GoogleSignin.configure({
-      webClientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID || 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com', 
-    });
-  }, []);
-
   const fetchAndSyncProfile = async () => {
     try {
       const response = await api.get('/users/profile');
       const data = response.data;
       
-      // Update store with fetched data
       updateProfile({
         name: data.name || 'Awakened User',
         bio: data.bio || '',
@@ -45,7 +37,6 @@ export const LoginScreen = () => {
         maxMana: data.stats.maxMana,
       });
 
-      // Update coins
       useUserStore.getState().addCoins(data.coins - useUserStore.getState().coins);
     } catch (error) {
       console.error('Failed to fetch profile:', error);
@@ -76,39 +67,15 @@ export const LoginScreen = () => {
     try {
       let userCredential;
       if (isLogin) {
-        userCredential = await auth().signInWithEmailAndPassword(email, password);
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
       } else {
-        userCredential = await auth().createUserWithEmailAndPassword(email, password);
+        userCredential = await createUserWithEmailAndPassword(auth, email, password);
       }
       
       await syncWithBackend(userCredential.user.email, userCredential.user.uid);
     } catch (error: any) {
       console.error(error);
       Alert.alert('Authentication Failed', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    try {
-      // Check if your device supports Google Play
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-      // Get the users ID token
-      const { data } = await GoogleSignin.signIn();
-
-      // Create a Google credential with the token
-      if (data?.idToken) {
-        const googleCredential = auth.GoogleAuthProvider.credential(data.idToken);
-        // Sign-in the user with the credential
-        const userCredential = await auth().signInWithCredential(googleCredential);
-        
-        await syncWithBackend(userCredential.user.email, userCredential.user.uid);
-      }
-    } catch (error: any) {
-      console.error(error);
-      Alert.alert('Google Sign-In Failed', error.message);
     } finally {
       setLoading(false);
     }
@@ -139,16 +106,6 @@ export const LoginScreen = () => {
 
         <TouchableOpacity style={styles.button} onPress={handleEmailAuth} disabled={loading}>
           {loading ? <ActivityIndicator color="#13141C" /> : <Text style={styles.buttonText}>{isLogin ? 'Login' : 'Sign Up'}</Text>}
-        </TouchableOpacity>
-
-        <View style={styles.dividerContainer}>
-          <View style={styles.divider} />
-          <Text style={styles.dividerText}>OR</Text>
-          <View style={styles.divider} />
-        </View>
-
-        <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleLogin} disabled={loading}>
-          <Text style={styles.googleBtnText}>Sign in with Google</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => setIsLogin(!isLogin)} style={styles.toggleBtn}>
@@ -198,35 +155,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 25,
-  },
-  divider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  dividerText: {
-    color: '#A0A0B0',
-    paddingHorizontal: 15,
-    fontWeight: 'bold',
-  },
-  googleBtn: {
-    backgroundColor: '#FFF',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  googleBtnText: {
-    color: '#000',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
   toggleBtn: {
-    marginTop: 10,
+    marginTop: 20,
     alignItems: 'center',
   },
   toggleText: {
