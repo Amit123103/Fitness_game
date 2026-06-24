@@ -106,7 +106,7 @@ export const LoginScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Image source={require('../../../../assets/icon.png')} style={styles.logo} />
+        <Image source={require('../../../assets/icon.png')} style={styles.logo} />
         <Text style={styles.title}>{isLogin ? 'Welcome Back' : 'Create Account'}</Text>
         
         <TextInput 
