@@ -17,9 +17,9 @@ export const LoginScreen = () => {
   const updateStats = useUserStore((state) => state.updateStats);
 
   useEffect(() => {
-    // Note: You must replace this webClientId with the one from your google-services.json -> client_info -> client_id array where client_type is 3
+    // Note: You must replace the EXPO_PUBLIC_WEB_CLIENT_ID inside mobile/.env
     GoogleSignin.configure({
-      webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com', 
+      webClientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID || 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com', 
     });
   }, []);
 
