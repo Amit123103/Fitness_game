@@ -25,6 +25,7 @@
     "expo-blur": "~15.0.8",
     "expo-build-properties": "^56.0.19",
     "expo-camera": "~17.0.10",
+    "expo-dev-client": "~6.0.21",
     "expo-gl": "~16.0.10",
     "expo-haptics": "~15.0.8",
     "expo-image-picker": "~17.0.10",
