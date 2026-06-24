@@ -1,4 +1,3 @@
 node_modules/
 .env
 mobile/.env
-google-services.json
