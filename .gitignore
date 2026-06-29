@@ -1,3 +1,5 @@
 node_modules/
 .env
 mobile/.env
+mobile/game-preview.apk  
+ 

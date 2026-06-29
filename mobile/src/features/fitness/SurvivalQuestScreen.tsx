@@ -234,7 +234,7 @@ export const SurvivalQuestScreen = () => {
       {/* System Error Logs */}
       <View style={styles.systemLogs}>
          <MotiText animate={{ opacity: [1, 0.5, 1] }} transition={{ loop: true }} style={styles.logLine}>
-            > SYSTEM ERROR: STAGNATION DETECTED
+            {'>'} SYSTEM ERROR: STAGNATION DETECTED
          </MotiText>
          <Text style={styles.logLine}>{`> TEMPERATURE: 55°C (131°F)`}</Text>
          <Text style={styles.logLine}>{`> MOVEMENT REQUIRED TO MAINTAIN CIRCULATION`}</Text>

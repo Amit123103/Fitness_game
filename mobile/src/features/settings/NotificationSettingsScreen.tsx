@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Alert } from 'react-native';
-import * as Notifications from 'expo-notifications';
 import { useNavigation } from '@react-navigation/native';
 
 export const NotificationSettingsScreen = () => {
@@ -8,37 +7,8 @@ export const NotificationSettingsScreen = () => {
   const [selectedMinutes, setSelectedMinutes] = useState<number>(1); // e.g., 1 minute from now for testing
 
   const scheduleNotification = async () => {
-    try {
-      const { status } = await Notifications.getPermissionsAsync();
-      if (status !== 'granted') {
-        const { status: newStatus } = await Notifications.requestPermissionsAsync();
-        if (newStatus !== 'granted') {
-          Alert.alert('Permission needed', 'We need notification permissions to send you quests.');
-          return;
-        }
-      }
-
-      await Notifications.cancelAllScheduledNotificationsAsync();
-      
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "A New Quest Awaits! ⚔️",
-          body: "Tap here to open your buzzer panel and complete your daily quest.",
-          data: { screen: 'BuzzerQuest' },
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-          seconds: selectedMinutes * 60,
-          repeats: false, // For testing we set repeats: false
-        },
-      });
-
-      Alert.alert('Success', `Daily quest notification set for ${selectedMinutes} minute(s) from now!`);
-      navigation.goBack();
-    } catch (error) {
-      console.error(error);
-      Alert.alert('Error', 'Failed to schedule notification');
-    }
+    Alert.alert('Notice', 'Push notifications have been disabled to support Expo Go.');
+    navigation.goBack();
   };
 
   return (

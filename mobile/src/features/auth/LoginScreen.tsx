@@ -3,10 +3,16 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityInd
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import Constants from 'expo-constants';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../../services/firebaseConfig';
 import api from '../../services/api';
 import { useUserStore } from '../../store/useUserStore';
+
+GoogleSignin.configure({
+  webClientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID,
+});
 
 export const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -97,11 +103,35 @@ export const LoginScreen = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    Alert.alert(
-      'Notice', 
-      'Google Login requires custom native code and cannot be run inside standard Expo Go. If you want Google Login, please run "npx eas build" to compile a custom APK!'
-    );
+  const handleGoogleLogin = async () => {
+    if (Constants.appOwnership === 'expo') {
+      Alert.alert(
+        'Notice', 
+        'Google Login requires custom native code and cannot be run inside standard Expo Go. If you want Google Login, please run "npx eas build" to compile a custom APK!'
+      );
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      const idToken = userInfo.data?.idToken;
+
+      if (!idToken) {
+        throw new Error('No ID token received from Google.');
+      }
+
+      const googleCredential = GoogleAuthProvider.credential(idToken);
+      const userCredential = await signInWithCredential(auth, googleCredential);
+      
+      await syncWithBackend(userCredential.user.email, userCredential.user.uid);
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert('Google Sign-In Failed', error.message || 'An error occurred during Google Sign-In.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "23874766515",
+    "project_id": "fitnessgame-64c42",
+    "storage_bucket": "fitnessgame-64c42.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:23874766515:android:007d13bf2b9f3df29ad2c6",
+        "android_client_info": {
+          "package_name": "com.game.fitnessgame"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAuQLzowzJcQZfvmydgc-f62OrihFN6v20"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

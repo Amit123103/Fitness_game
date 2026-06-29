@@ -1,10 +1,12 @@
 {
   "expo": {
-    "name": "mobile",
+    "name": "Fitness Game",
     "slug": "mobile",
+    "owner": "amit1231",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "scheme": "fitnessgame",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -13,7 +15,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.game.fitnessgame",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -35,6 +41,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "@react-native-google-signin/google-signin",
       "expo-asset",
       [
         "expo-camera",
@@ -48,7 +55,6 @@
           "locationAlwaysPermission": "Allow Rise Of The Warrior to use your location for road running tracking."
         }
       ],
-      "expo-notifications",
       [
         "expo-build-properties",
         {
@@ -60,7 +66,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "a4030a00-7bce-4bae-9d84-9fcbd6ab84bb"
+        "projectId": "2b89d58d-fc5e-460b-b0bb-b3f34136c11a"
       }
     }
   }
