@@ -1,25 +1,11 @@
-import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const serviceAccount = {
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  // Replace escaped newlines if passed directly in .env
-  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-};
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://cwoyapsdkrqjnywmgjau.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_KEY || 'sb_publishable_xX_jd8Y-49_03FdtaC9O7Q_QhWGk-J4';
 
-if (!getApps().length) {
-  try {
-    initializeApp({
-      credential: cert(serviceAccount),
-    });
-    console.log('Firebase Admin SDK initialized successfully.');
-  } catch (error) {
-    console.error('Firebase Admin SDK initialization error', error);
-  }
-}
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-export const db = getFirestore();
+console.log('Supabase Client initialized successfully.');

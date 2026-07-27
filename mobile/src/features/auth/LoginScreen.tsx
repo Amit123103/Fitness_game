@@ -3,29 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityInd
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import Constants from 'expo-constants';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '../../services/firebaseConfig';
+import { supabase } from '../../services/supabaseConfig';
 import api from '../../services/api';
 import { useUserStore } from '../../store/useUserStore';
-
-let googleSigninModule: any = null;
-const getGoogleSignin = () => {
-  if (Constants.appOwnership === 'expo') {
-    return null;
-  }
-  if (!googleSigninModule) {
-    try {
-      googleSigninModule = require('@react-native-google-signin/google-signin').GoogleSignin;
-      googleSigninModule.configure({
-        webClientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID,
-      });
-    } catch (e) {
-      console.warn('GoogleSignin unavailable:', e);
-    }
-  }
-  return googleSigninModule;
-};
 
 export const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -64,9 +44,9 @@ export const LoginScreen = () => {
     }
   };
 
-  const syncWithBackend = async (firebaseEmail: string | null, firebaseUid: string) => {
+  const syncWithBackend = async (userEmail: string | null, userUid: string) => {
     try {
-      const response = await api.post('/auth/firebase-login', { email: firebaseEmail, uid: firebaseUid });
+      const response = await api.post('/auth/supabase-login', { email: userEmail, uid: userUid });
       if (response.data.token) {
         await AsyncStorage.setItem('userToken', response.data.token);
         await fetchAndSyncProfile();
@@ -86,17 +66,28 @@ export const LoginScreen = () => {
 
     setLoading(true);
     try {
-      let userCredential;
       if (isLogin) {
-        userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) throw error;
+        if (data.user) {
+          await syncWithBackend(data.user.email ?? email, data.user.id);
+        }
       } else {
-        userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+        if (error) throw error;
+        if (data.user) {
+          await syncWithBackend(data.user.email ?? email, data.user.id);
+        }
       }
-      
-      await syncWithBackend(userCredential.user.email, userCredential.user.uid);
     } catch (error: any) {
-      console.error(error);
-      Alert.alert('Authentication Failed', error.message);
+      console.error('Supabase Auth error:', error);
+      Alert.alert('Authentication Failed', error.message || 'An error occurred during authentication.');
     } finally {
       setLoading(false);
     }
@@ -109,45 +100,24 @@ export const LoginScreen = () => {
     }
 
     try {
-      await sendPasswordResetEmail(auth, email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) throw error;
       Alert.alert('Success', 'A password reset link has been sent to your email.');
     } catch (error: any) {
       Alert.alert('Error', error.message);
     }
   };
 
-  const handleGoogleLogin = async () => {
-    if (Constants.appOwnership === 'expo') {
-      Alert.alert(
-        'Notice', 
-        'Google Login requires native code not present in Expo Go. Please log in with Email/Password or build a native APK using EAS!'
-      );
-      return;
-    }
-
-    const GoogleSignin = getGoogleSignin();
-    if (!GoogleSignin) {
-      Alert.alert('Notice', 'Google Sign-In is not supported on this device/build.');
-      return;
-    }
-
+  const handleOAuthLogin = async () => {
     try {
       setLoading(true);
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      const idToken = userInfo.data?.idToken;
-
-      if (!idToken) {
-        throw new Error('No ID token received from Google.');
-      }
-
-      const googleCredential = GoogleAuthProvider.credential(idToken);
-      const userCredential = await signInWithCredential(auth, googleCredential);
-      
-      await syncWithBackend(userCredential.user.email, userCredential.user.uid);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
+      if (error) throw error;
     } catch (error: any) {
       console.error(error);
-      Alert.alert('Google Sign-In Failed', error.message || 'An error occurred during Google Sign-In.');
+      Alert.alert('Sign-In Failed', error.message || 'An error occurred during Sign-In.');
     } finally {
       setLoading(false);
     }
@@ -199,8 +169,8 @@ export const LoginScreen = () => {
           <View style={styles.divider} />
         </View>
 
-        <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleLogin} disabled={loading}>
-          <Text style={styles.googleBtnText}>Sign in with Google</Text>
+        <TouchableOpacity style={styles.googleBtn} onPress={handleOAuthLogin} disabled={loading}>
+          <Text style={styles.googleBtnText}>Sign in with Google (Supabase)</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => setIsLogin(!isLogin)} style={styles.toggleBtn}>

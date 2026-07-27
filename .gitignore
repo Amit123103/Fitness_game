@@ -1,5 +1,7 @@
 node_modules/
+**/node_modules/
 .env
+*.env
 mobile/.env
-mobile/game-preview.apk  
- 
+backend/.env
+mobile/game-preview.apk
