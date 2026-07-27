@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Animated } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MotiView, MotiText } from 'moti';

@@ -7,12 +7,12 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "fitnessgame",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#13141C"
     },
     "ios": {
       "supportsTablet": true,
@@ -24,7 +24,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#13141C"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,

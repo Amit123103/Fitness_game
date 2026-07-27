@@ -593,6 +593,12 @@ const styles = StyleSheet.create({
   progressBarFill: {
     height: '100%',
   },
+  statsHeaderSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
   statsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',

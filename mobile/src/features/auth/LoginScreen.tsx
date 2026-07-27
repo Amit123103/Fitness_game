@@ -4,15 +4,28 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import Constants from 'expo-constants';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../../services/firebaseConfig';
 import api from '../../services/api';
 import { useUserStore } from '../../store/useUserStore';
 
-GoogleSignin.configure({
-  webClientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID,
-});
+let googleSigninModule: any = null;
+const getGoogleSignin = () => {
+  if (Constants.appOwnership === 'expo') {
+    return null;
+  }
+  if (!googleSigninModule) {
+    try {
+      googleSigninModule = require('@react-native-google-signin/google-signin').GoogleSignin;
+      googleSigninModule.configure({
+        webClientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID,
+      });
+    } catch (e) {
+      console.warn('GoogleSignin unavailable:', e);
+    }
+  }
+  return googleSigninModule;
+};
 
 export const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -107,8 +120,14 @@ export const LoginScreen = () => {
     if (Constants.appOwnership === 'expo') {
       Alert.alert(
         'Notice', 
-        'Google Login requires custom native code and cannot be run inside standard Expo Go. If you want Google Login, please run "npx eas build" to compile a custom APK!'
+        'Google Login requires native code not present in Expo Go. Please log in with Email/Password or build a native APK using EAS!'
       );
+      return;
+    }
+
+    const GoogleSignin = getGoogleSignin();
+    if (!GoogleSignin) {
+      Alert.alert('Notice', 'Google Sign-In is not supported on this device/build.');
       return;
     }
 

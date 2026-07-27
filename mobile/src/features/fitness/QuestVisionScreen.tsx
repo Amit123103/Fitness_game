@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, SafeAreaView, Animated } from 'react-native';
 import { Camera, CameraView } from 'expo-camera';
 import { MotiView, MotiText } from 'moti';
@@ -398,6 +399,9 @@ const styles = StyleSheet.create({
     width: 1,
     height: 30,
     backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  progressContainer: {
+    marginBottom: SPACING.xl,
   },
   progressSection: {
     marginBottom: SPACING.xl,
