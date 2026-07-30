@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import http from 'http';
+import path from 'path';
 import { Server } from 'socket.io';
 
 import userRoutes from './routes/userRoutes.js';
@@ -32,6 +33,15 @@ app.use('/api/users', userRoutes);
 
 app.get('/', (req, res) => {
   res.send('Rise of the Warrior API is running...');
+});
+
+app.get('/download-apk', (req, res) => {
+  const apkPath = path.join(process.cwd(), '../mobile/game-preview.apk');
+  res.download(apkPath, 'RiseOfTheWarrior.apk', (err) => {
+    if (err && !res.headersSent) {
+      res.status(404).send('APK file not found or not yet built.');
+    }
+  });
 });
 
 // Socket.io logic for real-time multiplayer
