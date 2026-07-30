@@ -3,6 +3,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
 const getBaseUrl = () => {
+  const configuredUrl = process.env.EXPO_PUBLIC_API_URL;
+  if (configuredUrl) {
+    return configuredUrl;
+  }
+
   const hostUri = Constants.expoConfig?.hostUri || (Constants as any).manifest2?.extra?.expoGo?.debuggerHost;
   if (hostUri) {
     const ip = hostUri.split(':')[0];
@@ -11,12 +16,7 @@ const getBaseUrl = () => {
     }
   }
 
-  const configuredUrl = process.env.EXPO_PUBLIC_API_URL;
-  if (configuredUrl) {
-    return configuredUrl;
-  }
-  
-  return 'http://192.168.1.3:5000/api';
+  return 'https://fitness-game-blush.vercel.app/api';
 };
 
 const api = axios.create({
