@@ -22,15 +22,18 @@ export const QuestVisionScreen = ({ navigation, route }: any) => {
   const { count, isActive, startTracking, stopTracking, incrementCount } = useFitnessTracking(exerciseType as ExerciseType);
   const { dailyQuest, questCompleted } = useUserStore();
 
-  useEffect(() => {
-    (async () => {
+  const requestCameraPermission = async () => {
+    try {
       const { status } = await Camera.requestCameraPermissionsAsync();
       setHasPermission(status === 'granted');
-    })();
-  }, []);
+    } catch (e) {
+      setHasPermission(true);
+    }
+  };
 
-  if (hasPermission === null) return <View style={styles.container} />;
-  if (hasPermission === false) return <Text>No access to camera</Text>;
+  useEffect(() => {
+    requestCameraPermission();
+  }, []);
 
   const handleRepDetected = () => {
     if (isActive) {
@@ -52,12 +55,33 @@ export const QuestVisionScreen = ({ navigation, route }: any) => {
     const diff = now - lastRepTime;
     setLastRepTime(now);
     
-    // Calculate intensity based on rep speed (higher intensity for faster reps)
     const newIntensity = Math.max(0, Math.min(100, 100 - (diff / 50))); 
     setIntensity(newIntensity);
   };
 
   const currentQuest = dailyQuest[normalizedType as keyof typeof dailyQuest];
+
+  if (hasPermission === false) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: SPACING.lg }]}>
+        <MotiView from={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={styles.permissionCard}>
+          <Target size={56} color={COLORS.primary} style={{ marginBottom: SPACING.md }} />
+          <Text style={styles.permissionTitle}>SYSTEM VISION ACCESS</Text>
+          <Text style={styles.permissionSub}>
+            Grant camera permission to enable AI pose detection and track your physical reps in real time.
+          </Text>
+          <TouchableOpacity style={styles.grantBtn} onPress={requestCameraPermission}>
+            <LinearGradient colors={[COLORS.primary, COLORS.accent]} style={styles.btnGradient}>
+              <Text style={styles.btnText}>ENABLE CAMERA VISION</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+          <TouchableOpacity style={{ marginTop: SPACING.md }} onPress={() => setHasPermission(true)}>
+            <Text style={{ color: COLORS.textSecondary, fontSize: 11 }}>Continue with Motion Sensors Only</Text>
+          </TouchableOpacity>
+        </MotiView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -66,10 +90,19 @@ export const QuestVisionScreen = ({ navigation, route }: any) => {
 
       <View style={styles.content}>
         {isActive ? (
-          <AIBodyTracker 
-            mode={exerciseType as any} 
-            onRepDetected={handleRepDetected} 
-          />
+          <View style={StyleSheet.absoluteFill}>
+            {hasPermission && (
+              <CameraView
+                style={StyleSheet.absoluteFill}
+                facing="front"
+                onMountError={() => console.log('Camera feed mount fallback active')}
+              />
+            )}
+            <AIBodyTracker 
+              mode={exerciseType as any} 
+              onRepDetected={handleRepDetected} 
+            />
+          </View>
         ) : (
           <View style={styles.cameraPlaceholder}>
             <LinearGradient colors={['#050505', '#111']} style={StyleSheet.absoluteFill} />
@@ -211,6 +244,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  permissionCard: {
+    backgroundColor: 'rgba(22, 25, 38, 0.95)',
+    padding: SPACING.xl,
+    borderRadius: BORDER_RADIUS.xl,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 240, 255, 0.3)',
+    maxWidth: 340,
+  },
+  permissionTitle: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 1.2,
+    marginBottom: SPACING.xs,
+  },
+  permissionSub: {
+    color: COLORS.textSecondary,
+    fontSize: 11,
+    textAlign: 'center',
+    marginBottom: SPACING.lg,
+    lineHeight: 16,
+  },
+  grantBtn: {
+    width: '100%',
+    height: 48,
+    borderRadius: BORDER_RADIUS.md,
+    overflow: 'hidden',
   },
   flashOverlay: {
     ...StyleSheet.absoluteFillObject,
