@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "node node_modules/typescript/bin/tsc",
     "start": "node dist/index.js",
     "prisma:push": "prisma db push",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -24,6 +24,7 @@
     "node-cron": "^4.5.0",
     "nodemailer": "^9.0.1",
     "socket.io": "^4.8.3",
+    "typescript": "^6.0.2",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
@@ -36,7 +37,6 @@
     "@types/nodemailer": "^8.0.1",
     "@types/uuid": "^10.0.0",
     "ts-node-dev": "^2.0.0",
-    "tsx": "^4.21.0",
-    "typescript": "^6.0.2"
+    "tsx": "^4.21.0"
   }
 }
