@@ -4,9 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '../../services/supabaseConfig';
 import api from '../../services/api';
 import { useUserStore } from '../../store/useUserStore';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -247,16 +250,43 @@ export const LoginScreen = () => {
     try {
       setLoading(true);
       const redirectUrl = Linking.createURL('auth/callback');
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
+          skipBrowserRedirect: true,
         },
       });
+
       if (error) throw error;
+
+      if (data?.url) {
+        const res = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+        if (res.type === 'success' && res.url) {
+          // Process the returned URL containing session hash or tokens
+          const hashIndex = res.url.indexOf('#');
+          if (hashIndex !== -1) {
+            const hash = res.url.substring(hashIndex + 1);
+            const params = new URLSearchParams(hash);
+            const accessToken = params.get('access_token');
+            const refreshToken = params.get('refresh_token');
+
+            if (accessToken && refreshToken) {
+              const { data: sessionData, error: sessionErr } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+              });
+              if (sessionData?.session?.user) {
+                Alert.alert('Google Sign-In Success 🚀', `Welcome back, ${sessionData.session.user.email}!`);
+                await syncWithBackend(sessionData.session.user.email ?? null, sessionData.session.user.id);
+              }
+            }
+          }
+        }
+      }
     } catch (error: any) {
-      console.error(error);
-      Alert.alert('Sign-In Failed', error.message || 'An error occurred during Sign-In.');
+      console.error('Google Sign-In Error:', error);
+      Alert.alert('Sign-In Failed', error.message || 'An error occurred during Google Sign-In.');
     } finally {
       setLoading(false);
     }
