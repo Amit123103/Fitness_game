@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import * as Linking from 'expo-linking';
 import { supabase } from '../../services/supabaseConfig';
 import api from '../../services/api';
 import { useUserStore } from '../../store/useUserStore';
@@ -16,6 +17,66 @@ export const LoginScreen = () => {
   const navigation = useNavigation<any>();
   const updateProfile = useUserStore((state) => state.updateProfile);
   const updateStats = useUserStore((state) => state.updateStats);
+
+  // Handle incoming deep links (e.g. email confirmation redirect or OAuth return)
+  useEffect(() => {
+    const processAuthUrl = async (url: string) => {
+      try {
+        if (!url) return;
+        // Parse token or session from URL hash or query params
+        const hashIndex = url.indexOf('#');
+        if (hashIndex !== -1) {
+          const hash = url.substring(hashIndex + 1);
+          const params = new URLSearchParams(hash);
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+
+          if (accessToken && refreshToken) {
+            setLoading(true);
+            const { data, error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (data?.session?.user) {
+              Alert.alert('Email Confirmed! 🎉', 'Your email has been verified successfully.');
+              await syncWithBackend(data.session.user.email ?? null, data.session.user.id);
+              return;
+            }
+          }
+        }
+
+        const queryIndex = url.indexOf('?');
+        if (queryIndex !== -1) {
+          const query = url.substring(queryIndex + 1);
+          const params = new URLSearchParams(query);
+          const code = params.get('code');
+          if (code) {
+            setLoading(true);
+            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+            if (data?.session?.user) {
+              Alert.alert('Email Confirmed! 🎉', 'Your email has been verified successfully.');
+              await syncWithBackend(data.session.user.email ?? null, data.session.user.id);
+              return;
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error handling auth deep link:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    Linking.getInitialURL().then((url) => {
+      if (url) processAuthUrl(url);
+    });
+
+    const subscription = Linking.addEventListener('url', (event) => {
+      if (event.url) processAuthUrl(event.url);
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   const fetchAndSyncProfile = async () => {
     try {
@@ -108,16 +169,29 @@ export const LoginScreen = () => {
           );
         }
       } else {
-        // Sign Up Mode
+        // Sign Up Mode with Mobile App Redirect Scheme
         let supabaseSuccess = false;
         try {
+          const redirectUrl = Linking.createURL('auth/callback');
           const { data, error } = await supabase.auth.signUp({
             email: trimmedEmail,
             password,
+            options: {
+              emailRedirectTo: redirectUrl,
+            },
           });
           if (!error && data.user) {
             supabaseSuccess = true;
-            await syncWithBackend(data.user.email ?? trimmedEmail, data.user.id);
+            if (data.session) {
+              // Direct login if email confirmation is disabled in Supabase
+              await syncWithBackend(data.user.email ?? trimmedEmail, data.user.id);
+            } else {
+              // Email confirmation required by Supabase
+              Alert.alert(
+                'Verification Email Sent 📧',
+                `We have sent a verification link to ${trimmedEmail}.\n\nPlease check your email inbox and tap the link to activate your account.`
+              );
+            }
             return;
           }
         } catch (supaErr) {
@@ -158,7 +232,10 @@ export const LoginScreen = () => {
     }
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const redirectUrl = Linking.createURL('auth/callback');
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: redirectUrl,
+      });
       if (error) throw error;
       Alert.alert('Success', 'A password reset link has been sent to your email.');
     } catch (error: any) {
@@ -169,8 +246,12 @@ export const LoginScreen = () => {
   const handleOAuthLogin = async () => {
     try {
       setLoading(true);
+      const redirectUrl = Linking.createURL('auth/callback');
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+        },
       });
       if (error) throw error;
     } catch (error: any) {
