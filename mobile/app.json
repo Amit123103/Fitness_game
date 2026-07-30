@@ -2,7 +2,7 @@
   "expo": {
     "name": "Fitness Game",
     "slug": "mobile",
-    "owner": "amit1231",
+    "owner": "Amitkumar8957",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -62,11 +62,6 @@
         }
       ],
       "expo-web-browser"
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "2b89d58d-fc5e-460b-b0bb-b3f34136c11a"
-      }
-    }
+    ]
   }
 }
