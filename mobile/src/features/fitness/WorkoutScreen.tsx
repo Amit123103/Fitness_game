@@ -3,20 +3,20 @@ import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView, MotiText } from 'moti';
-import { Play, Square, Activity, Flame, Zap, Swords } from 'lucide-react-native';
+import { Play, Square, Activity, Flame, Zap, Swords, Camera } from 'lucide-react-native';
 import { COLORS, SPACING, BORDER_RADIUS } from '../../styles/theme';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { useFitnessTracking, ExerciseType } from '../../hooks/useFitnessTracking';
 
 const { width } = Dimensions.get('window');
 
-export const WorkoutScreen = () => {
-  const [exercise, setExercise] = useState<ExerciseType>('PULLUPS');
+export const WorkoutScreen = ({ navigation }: any) => {
+  const [exercise, setExercise] = useState<ExerciseType>('PUSHUPS');
   const { count, isActive, startTracking, stopTracking, data } = useFitnessTracking(exercise);
 
   const exercises: { type: ExerciseType; label: string; icon: any; color: string }[] = [
-    { type: 'PULLUPS', label: 'Pullups', icon: Flame, color: COLORS.secondary },
     { type: 'PUSHUPS', label: 'Pushups', icon: Swords, color: COLORS.accent },
+    { type: 'PULLUPS', label: 'Pullups', icon: Flame, color: COLORS.secondary },
     { type: 'RUNNING', label: 'Running', icon: Zap, color: COLORS.primary },
   ];
 
@@ -54,6 +54,20 @@ export const WorkoutScreen = () => {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* PRIMARY CAMERA AI VISION TRACKER BUTTON */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate('QuestVision', { exerciseType: exercise, autoStart: true })}
+          style={styles.visionTrackerBtn}
+        >
+          <LinearGradient
+            colors={['#A020F0', '#00F0FF']}
+            style={styles.actionGradient}
+          >
+            <Camera size={22} color="white" />
+            <Text style={styles.actionText}>LAUNCH {exercise} CAMERA VISION</Text>
+          </LinearGradient>
+        </TouchableOpacity>
 
         <View style={styles.mainTracker}>
           <MotiView
@@ -108,7 +122,7 @@ export const WorkoutScreen = () => {
             ) : (
               <>
                 <Play size={24} color="white" fill="white" />
-                <Text style={styles.actionText}>BEGIN TRAINING</Text>
+                <Text style={styles.actionText}>BEGIN SENSOR SESSION</Text>
               </>
             )}
           </LinearGradient>
@@ -242,10 +256,26 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     width: '100%',
-    height: 60,
+    height: 56,
     borderRadius: BORDER_RADIUS.lg,
     overflow: 'hidden',
-    marginBottom: SPACING.lg,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  visionTrackerBtn: {
+    width: '100%',
+    height: 56,
+    borderRadius: BORDER_RADIUS.lg,
+    overflow: 'hidden',
+    marginVertical: SPACING.md,
+    shadowColor: '#A020F0',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 6,
   },
   actionGradient: {
     flex: 1,

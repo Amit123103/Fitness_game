@@ -33,6 +33,7 @@ export const QuestVisionScreen = ({ navigation, route }: any) => {
 
   useEffect(() => {
     requestCameraPermission();
+    startTracking();
   }, []);
 
   const handleRepDetected = () => {
