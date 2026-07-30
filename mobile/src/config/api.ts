@@ -5,7 +5,7 @@ import { Platform } from 'react-native';
 // iOS Simulator: localhost
 // Physical Device: Use your machine's local IP (e.g., 192.168.1.XX)
 
-const LOCAL_IP = '10.0.2.2'; // Change this to your local IP for physical device testing
+const LOCAL_IP = '192.168.1.3'; // Local machine IP for device/emulator testing
 
 export const BASE_URL = Platform.select({
   android: `http://${LOCAL_IP}:5000`,

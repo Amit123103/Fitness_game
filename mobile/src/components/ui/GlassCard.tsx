@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   blur: {
-    flex: 1,
+    width: '100%',
   },
   content: {
     padding: 16,

@@ -1,13 +1,15 @@
 import 'react-native-gesture-handler';
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, LogBox } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { DialogueOverlay } from './src/components/ui/DialogueOverlay';
 import { useAppTheme } from './src/styles/theme';
 import { useUserStore } from './src/store/useUserStore';
-// Push notifications removed for Expo Go compatibility
+
+LogBox.ignoreLogs(['THREE.WARNING: Multiple instances of Three.js being imported']);
+
 export default function App() {
   const themeColors = useAppTheme();
   const themeMode = useUserStore((state) => state.systemSettings.themeMode);

@@ -129,6 +129,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: SPACING.lg,
+    paddingBottom: 95,
   },
   tabContainer: {
     flexDirection: 'row',

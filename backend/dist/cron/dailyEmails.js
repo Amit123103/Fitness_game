@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { db } from '../config/db.js';
+import { supabase } from '../config/db.js';
 import { sendDailyQuestionEmail } from '../services/emailService.js';
 const DAILY_QUESTIONS = [
     "Did you complete your 10,000 steps today?",
@@ -13,13 +13,12 @@ export const startDailyEmailCron = () => {
     cron.schedule('0 9 * * *', async () => {
         console.log('Running daily email cron job...');
         try {
-            const usersRef = db.collection('users');
-            const snapshot = await usersRef.get();
+            const { data: users, error } = await supabase.from('users').select('email');
+            if (error || !users)
+                return;
             const todayQuestion = DAILY_QUESTIONS[Math.floor(Math.random() * DAILY_QUESTIONS.length)];
-            for (const doc of snapshot.docs) {
-                const user = doc.data();
+            for (const user of users) {
                 if (user.email) {
-                    // Send email sequentially, in production we might want a message queue
                     await sendDailyQuestionEmail(user.email, todayQuestion);
                 }
             }

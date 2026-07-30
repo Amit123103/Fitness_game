@@ -110,14 +110,18 @@ export const QuestVisionScreen = ({ navigation, route }: any) => {
               </View>
             </View>
 
-            <View style={styles.sightContainer}>
+            <TouchableOpacity 
+              activeOpacity={0.8}
+              onPress={handleRepDetected}
+              style={styles.sightContainer}
+            >
               <MotiView
                 from={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: isActive ? 1 : 0.3, scale: isActive ? 1.1 : 1 }}
                 style={styles.sight}
               >
                 <View style={styles.hexBorder}>
-                   <Target size={140} color="rgba(0, 240, 255, 0.2)" strokeWidth={0.5} />
+                   <Target size={140} color="rgba(0, 240, 255, 0.4)" strokeWidth={1} />
                 </View>
                 
                 <View style={[styles.techCorner, styles.topL, { borderColor: COLORS.primary }]} />
@@ -133,7 +137,7 @@ export const QuestVisionScreen = ({ navigation, route }: any) => {
                    />
                 )}
               </MotiView>
-            </View>
+            </TouchableOpacity>
 
             {/* Tracking Data Panel */}
             <View style={styles.bottomPanel}>
@@ -159,7 +163,7 @@ export const QuestVisionScreen = ({ navigation, route }: any) => {
                   <View style={styles.statBox}>
                     <Text style={styles.statLabel}>QUEST PROGRESS</Text>
                     <Text style={styles.statValue}>
-                      {currentQuest.current}/{currentQuest.goal}
+                      {currentQuest?.current || 0}/{currentQuest?.goal || 100}
                     </Text>
                   </View>
                 </View>
@@ -167,11 +171,20 @@ export const QuestVisionScreen = ({ navigation, route }: any) => {
                 <View style={styles.progressContainer}>
                   <View style={styles.progressBg}>
                     <MotiView 
-                      animate={{ width: `${Math.min((currentQuest.current / currentQuest.goal) * 100, 100)}%` }}
+                      animate={{ width: `${Math.min(((currentQuest?.current || 0) / (currentQuest?.goal || 100)) * 100, 100)}%` }}
                       style={styles.progressFill}
                     />
                   </View>
                 </View>
+
+                {isActive && (
+                  <TouchableOpacity 
+                    onPress={handleRepDetected}
+                    style={styles.manualRepBtn}
+                  >
+                    <Text style={styles.manualRepText}>+1 MANUAL REP</Text>
+                  </TouchableOpacity>
+                )}
 
                 <TouchableOpacity 
                   onPress={isActive ? stopTracking : startTracking}
@@ -434,6 +447,21 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 4,
     overflow: 'hidden',
+  },
+  manualRepBtn: {
+    backgroundColor: 'rgba(0, 240, 255, 0.2)',
+    borderWidth: 1,
+    borderColor: '#00F0FF',
+    paddingVertical: SPACING.xs + 2,
+    borderRadius: BORDER_RADIUS.md,
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  manualRepText: {
+    color: '#00F0FF',
+    fontSize: 12,
+    fontWeight: 'bold',
+    letterSpacing: 1,
   },
   btnGradient: {
     flex: 1,

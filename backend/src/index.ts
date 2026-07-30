@@ -28,6 +28,7 @@ app.use(express.json());
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/users', userRoutes);
 
 app.get('/', (req, res) => {
   res.send('Rise of the Warrior API is running...');
@@ -69,7 +70,7 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+const PORT = Number(process.env.PORT) || 5000;
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on port ${PORT} (bound to 0.0.0.0)`);
 });

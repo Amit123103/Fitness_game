@@ -1,15 +1,29 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
-// IMPORTANT: Replace with your actual backend IP/URL. For testing on emulator, 10.0.2.2 is localhost.
-// If testing on a physical device, this must be the local IP address of your machine running the backend (e.g., 192.168.x.x)
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:5000/api'; 
+const getBaseUrl = () => {
+  const hostUri = Constants.expoConfig?.hostUri || (Constants as any).manifest2?.extra?.expoGo?.debuggerHost;
+  if (hostUri) {
+    const ip = hostUri.split(':')[0];
+    if (ip && ip !== 'localhost' && ip !== '127.0.0.1') {
+      return `http://${ip}:5000/api`;
+    }
+  }
+
+  const configuredUrl = process.env.EXPO_PUBLIC_API_URL;
+  if (configuredUrl) {
+    return configuredUrl;
+  }
+  
+  return 'http://192.168.1.3:5000/api';
+};
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: getBaseUrl(),
+  timeout: 10000,
 });
 
-// Add a request interceptor to attach the JWT token to every request
 api.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem('userToken');

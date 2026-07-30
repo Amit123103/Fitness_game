@@ -34,7 +34,7 @@ interface DailyQuest {
   running: QuestTask; // in meters
 }
 
-export type WarriorRank = 'E' | 'D' | 'C' | 'B' | 'A' | 'S';
+export type WarriorRank = 'E' | 'D' | 'C' | 'B' | 'A' | 'S' | 'S+' | 'S++' | 'S+++' | 'INFINITE';
 
 interface SystemSettings {
   haptics: boolean;
@@ -124,8 +124,8 @@ export const useUserStore = create<UserState>((set, get) => ({
     xp: 0,
   },
   coins: 100,
-  skillPoints: 0,
-  unlockedSkills: {},
+  skillPoints: 5,
+  unlockedSkills: { 'fire_slash': 1, 'dash': 1, 'iron_wall': 1, 'berserk': 1 },
   shadowArmy: [],
   dailyQuest: {
     pushups: { current: 0, goal: 100 },

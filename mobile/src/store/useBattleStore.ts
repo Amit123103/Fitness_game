@@ -43,6 +43,10 @@ const MONSTER_DATABASE: Record<WarriorRank, any> = {
   'B': { name: 'Blood Orc', hp: 1200, attack: 150, defense: 110 },
   'A': { name: 'Dread Lich', hp: 3500, attack: 450, defense: 350 },
   'S': { name: 'Shadow Monarch Clone', hp: 10000, attack: 1200, defense: 900 },
+  'S+': { name: 'Kargalgan Demon King', hp: 25000, attack: 3000, defense: 2200 },
+  'S++': { name: 'Dragon Sovereign Kamish', hp: 75000, attack: 8500, defense: 6000 },
+  'S+++': { name: 'Monarch of Destruction', hp: 200000, attack: 22000, defense: 15000 },
+  'INFINITE': { name: 'Absolute Being Void God', hp: 999999, attack: 99999, defense: 50000 },
 };
 
 export const useBattleStore = create<BattleState>((set, get) => ({
@@ -111,12 +115,11 @@ export const useBattleStore = create<BattleState>((set, get) => ({
     });
 
     if (newEnemyHp === 0) {
-      const highRank = enemy.rank === 'A' || enemy.rank === 'S';
       set({ 
         isBattleOver: true, 
         winner: 'PLAYER', 
-        canExtract: highRank,
-        battleLog: [...get().battleLog.slice(-5), highRank ? 'ENTITY DEWORMED. EXTRACTION PROTOCOL READY.' : 'CRITICAL VICTORY! Enemy eliminated.'] 
+        canExtract: true,
+        battleLog: [...get().battleLog.slice(-5), 'CRITICAL VICTORY! Shadow entity defeated. EXTRACTION PROTOCOL READY!'] 
       });
     } else {
       setTimeout(() => get().enemyAttack(), 1000);
@@ -127,18 +130,18 @@ export const useBattleStore = create<BattleState>((set, get) => ({
     const { player, isBattleOver, turn, summonedShadows } = get();
     if (!player || isBattleOver || turn !== 'PLAYER') return;
     if (player.mana < shadow.manaCost) {
-      set({ battleLog: [...get().battleLog.slice(-5), `Insufficient Mana to summon ${shadow.name}!`] });
+      set({ battleLog: [...get().battleLog.slice(-5), `Insufficient Mana to deploy ${shadow.name}!`] });
       return;
     }
     if (summonedShadows.some(s => s.id === shadow.id)) {
-      set({ battleLog: [...get().battleLog.slice(-5), `${shadow.name} is already deployed!`] });
+      set({ battleLog: [...get().battleLog.slice(-5), `${shadow.name} is already deployed in battle!`] });
       return;
     }
 
     set({
       player: { ...player, mana: player.mana - shadow.manaCost },
       summonedShadows: [...summonedShadows, shadow],
-      battleLog: [...get().battleLog.slice(-5), `Shadow Army Response: ${shadow.name} has emerged from the abyss!`],
+      battleLog: [...get().battleLog.slice(-5), `Shadow Command: ${shadow.name} emerges to support you in battle!`],
     });
   },
 
@@ -146,28 +149,34 @@ export const useBattleStore = create<BattleState>((set, get) => ({
     const { canExtract, player } = get();
     if (!canExtract || !player) return false;
 
-    // Base 30% chance, increased by mana reserve
-    const manaBonus = Math.floor(player.mana / 100);
-    const success = (Math.random() * 100) < (30 + manaBonus);
+    // 70% base success rate + mana bonus
+    const manaBonus = Math.floor((player.mana / player.maxMana) * 25);
+    const success = (Math.random() * 100) < (70 + manaBonus);
 
     if (success) {
-       set({ battleLog: [...get().battleLog.slice(-5), 'ARISE. The shadow has been claimed.'] });
+       set({ 
+         canExtract: false,
+         battleLog: [...get().battleLog.slice(-5), 'ARISE! The shadow has been claimed into your Shadow Army!'] 
+       });
     } else {
        set({ 
          canExtract: false,
-         battleLog: [...get().battleLog.slice(-5), 'The soul has faded into the void. Extraction failed.'] 
+         battleLog: [...get().battleLog.slice(-5), 'The entity\'s shadow dissolved into the void. Extraction failed.'] 
        });
     }
     return success;
   },
 
   playerDefend: () => {
-    const { isBattleOver, turn } = get();
-    if (isBattleOver || turn !== 'PLAYER') return;
+    const { player, isBattleOver, turn } = get();
+    if (!player || isBattleOver || turn !== 'PLAYER') return;
+
+    const restoredMana = Math.min(player.maxMana, player.mana + 20);
 
     set({
+      player: { ...player, mana: restoredMana },
       isDefending: true,
-      battleLog: [...get().battleLog.slice(-5), 'You take a defensive stance. Damage will be reduced.'],
+      battleLog: [...get().battleLog.slice(-5), 'You take a defensive stance (+20 Mana). Enemy damage reduced!'],
       turn: 'ENEMY',
     });
     
@@ -178,7 +187,7 @@ export const useBattleStore = create<BattleState>((set, get) => ({
     const { player, enemy, isBattleOver, turn, summonedShadows } = get();
     if (!player || !enemy || isBattleOver || turn !== 'PLAYER') return;
     if (player.mana < skill.manaCost) {
-      set({ battleLog: [...get().battleLog.slice(-5), 'Insufficient Mana! Select another action.'] });
+      set({ battleLog: [...get().battleLog.slice(-5), 'Insufficient Mana! Select another action or Defend.'] });
       return;
     }
 
@@ -195,12 +204,11 @@ export const useBattleStore = create<BattleState>((set, get) => ({
     });
 
     if (newEnemyHp === 0) {
-      const highRank = enemy.rank === 'A' || enemy.rank === 'S';
       set({ 
         isBattleOver: true, 
         winner: 'PLAYER', 
-        canExtract: highRank,
-        battleLog: [...get().battleLog.slice(-5), highRank ? 'SOUL CAPTURED. EXTRACTION PROTOCOL INITIALIZED.' : `${skill.name} obliterated the enemy!`] 
+        canExtract: true,
+        battleLog: [...get().battleLog.slice(-5), `${skill.name} obliterated the target! EXTRACTION PROTOCOL READY!`] 
       });
     } else {
       setTimeout(() => get().enemyAttack(), 1000);
@@ -237,6 +245,10 @@ export const useBattleStore = create<BattleState>((set, get) => ({
       'B': { xp: 1500, coins: 1200 },
       'A': { xp: 4500, coins: 4000 },
       'S': { xp: 15000, coins: 15000 },
+      'S+': { xp: 45000, coins: 50000 },
+      'S++': { xp: 120000, coins: 150000 },
+      'S+++': { xp: 350000, coins: 500000 },
+      'INFINITE': { xp: 1000000, coins: 1000000 },
     };
     return rewardsMap[currentRank];
   },

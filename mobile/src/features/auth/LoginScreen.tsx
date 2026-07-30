@@ -59,7 +59,8 @@ export const LoginScreen = () => {
   };
 
   const handleEmailAuth = async () => {
-    if (!email || !password) {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password) {
       Alert.alert('Error', 'Please enter both email and password');
       return;
     }
@@ -67,26 +68,83 @@ export const LoginScreen = () => {
     setLoading(true);
     try {
       if (isLogin) {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        if (data.user) {
-          await syncWithBackend(data.user.email ?? email, data.user.id);
+        // 1. Try Supabase Auth first
+        let supabaseSuccess = false;
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: trimmedEmail,
+            password,
+          });
+          if (!error && data.user) {
+            supabaseSuccess = true;
+            await syncWithBackend(data.user.email ?? trimmedEmail, data.user.id);
+            return;
+          }
+        } catch (supaErr) {
+          console.log('Supabase sign-in failed, trying backend fallback...', supaErr);
+        }
+
+        // 2. Fallback to Direct Backend Login
+        if (!supabaseSuccess) {
+          try {
+            const backendRes = await api.post('/auth/login', {
+              email: trimmedEmail,
+              password,
+            });
+            if (backendRes.data?.token) {
+              await AsyncStorage.setItem('userToken', backendRes.data.token);
+              await fetchAndSyncProfile();
+              navigation.replace('Main');
+              return;
+            }
+          } catch (backendErr: any) {
+            console.log('Backend login failed:', backendErr?.response?.data || backendErr.message);
+          }
+
+          // If both fail:
+          Alert.alert(
+            'Authentication Failed',
+            'Invalid email or password. If you do not have an account yet, please tap "Don\'t have an account? Sign Up" below to create one.'
+          );
         }
       } else {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-        if (error) throw error;
-        if (data.user) {
-          await syncWithBackend(data.user.email ?? email, data.user.id);
+        // Sign Up Mode
+        let supabaseSuccess = false;
+        try {
+          const { data, error } = await supabase.auth.signUp({
+            email: trimmedEmail,
+            password,
+          });
+          if (!error && data.user) {
+            supabaseSuccess = true;
+            await syncWithBackend(data.user.email ?? trimmedEmail, data.user.id);
+            return;
+          }
+        } catch (supaErr) {
+          console.log('Supabase sign-up failed, trying backend fallback...', supaErr);
+        }
+
+        // Fallback to Direct Backend Sign Up
+        if (!supabaseSuccess) {
+          try {
+            const backendRes = await api.post('/auth/signup', {
+              email: trimmedEmail,
+              password,
+            });
+            if (backendRes.data?.token) {
+              await AsyncStorage.setItem('userToken', backendRes.data.token);
+              await fetchAndSyncProfile();
+              navigation.replace('Main');
+              return;
+            }
+          } catch (backendErr: any) {
+            const msg = backendErr?.response?.data?.error || 'Failed to create account.';
+            Alert.alert('Sign Up Failed', msg);
+          }
         }
       }
     } catch (error: any) {
-      console.error('Supabase Auth error:', error);
+      console.error('Auth error:', error);
       Alert.alert('Authentication Failed', error.message || 'An error occurred during authentication.');
     } finally {
       setLoading(false);
@@ -118,6 +176,27 @@ export const LoginScreen = () => {
     } catch (error: any) {
       console.error(error);
       Alert.alert('Sign-In Failed', error.message || 'An error occurred during Sign-In.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQuickTestLogin = async () => {
+    setLoading(true);
+    try {
+      const response = await api.post('/auth/supabase-login', {
+        email: 'test@example.com',
+        uid: 'test-user-123',
+      });
+
+      if (response.data?.token) {
+        await AsyncStorage.setItem('userToken', response.data.token);
+        await fetchAndSyncProfile();
+        navigation.replace('Main');
+      }
+    } catch (error) {
+      console.error('Quick test login failed:', error);
+      Alert.alert('Error', 'Could not complete test login. Please make sure backend is running.');
     } finally {
       setLoading(false);
     }
@@ -161,6 +240,10 @@ export const LoginScreen = () => {
 
         <TouchableOpacity style={styles.button} onPress={handleEmailAuth} disabled={loading}>
           {loading ? <ActivityIndicator color="#13141C" /> : <Text style={styles.buttonText}>{isLogin ? 'Login' : 'Sign Up'}</Text>}
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.quickTestBtn} onPress={handleQuickTestLogin} disabled={loading}>
+          <Text style={styles.quickTestBtnText}>⚡ Quick Test Login (1-Tap Access)</Text>
         </TouchableOpacity>
 
         <View style={styles.dividerContainer}>
@@ -254,6 +337,20 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#13141C',
     fontSize: 18,
+    fontWeight: 'bold',
+  },
+  quickTestBtn: {
+    backgroundColor: '#FF0055',
+    padding: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#FF3377',
+  },
+  quickTestBtnText: {
+    color: '#FFFFFF',
+    fontSize: 15,
     fontWeight: 'bold',
   },
   dividerContainer: {

@@ -39,10 +39,10 @@ export const useFitnessTracking = (type: ExerciseType) => {
 
   const processExercise = (accData: { x: number, y: number, z: number }) => {
     const { y, z } = accData;
+    const normalizedType = type.toUpperCase();
 
-    switch (type) {
+    switch (normalizedType) {
       case 'PULLUPS':
-        // Detecting pullups via Y-axis (vertical movement)
         if (state.current === 'START' && y < baseline) {
           state.current = 'DOWN';
         } else if (state.current === 'DOWN' && y > threshold) {
@@ -53,8 +53,7 @@ export const useFitnessTracking = (type: ExerciseType) => {
         break;
       
       case 'PUSHUPS':
-        // Detecting pushups via Z or Y depending on phone placement (chest/pocket)
-        // Here we assume phone is on the floor/chest: Z-axis change
+      case 'SQUATS':
         if (state.current === 'START' && z < baseline) {
           state.current = 'DOWN';
         } else if (state.current === 'DOWN' && z > threshold) {
@@ -65,7 +64,6 @@ export const useFitnessTracking = (type: ExerciseType) => {
         break;
 
       case 'RUNNING':
-        // Simplified: use magnitude peaks to detect steps
         const magnitude = Math.sqrt(accData.x**2 + accData.y**2 + accData.z**2);
         if (magnitude > 1.5) {
           handleRepetition();
@@ -73,7 +71,6 @@ export const useFitnessTracking = (type: ExerciseType) => {
         break;
       
       case 'PLANK':
-        // Time based - handled separately or via stillness
         break;
     }
   };
@@ -85,20 +82,23 @@ export const useFitnessTracking = (type: ExerciseType) => {
     addXP(10);
     
     // Physical feedback
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    try {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (e) {}
     
+    const normalizedType = type.toUpperCase();
     // Mapping specific exercises to stats
-    if (type === 'PUSHUPS') {
+    if (normalizedType === 'PUSHUPS') {
       updateStats({ strength: 0.1 });
       updateQuestProgress('pushups', 1);
     }
-    if (type === 'PULLUPS') {
-      updateStats({ strength: 0.1, stamina: 0.05 });
+    if (normalizedType === 'SQUATS' || normalizedType === 'PULLUPS') {
+      updateStats({ stamina: 0.1 });
       updateQuestProgress('pullups', 1);
     }
-    if (type === 'RUNNING') {
+    if (normalizedType === 'RUNNING') {
       updateStats({ speed: 0.1 });
-      updateQuestProgress('running', 10); // 10 meters per step magnitude for simulation
+      updateQuestProgress('running', 10);
     }
   };
 

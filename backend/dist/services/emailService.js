@@ -56,4 +56,39 @@ export const sendDailyQuestionEmail = async (to, question) => {
         console.error('Error sending daily question email:', error);
     }
 };
+export const sendApkBuildEmail = async (to, buildUrl, apkUrl) => {
+    const mailOptions = {
+        from: process.env.EMAIL_USER || 'your-email@gmail.com',
+        to,
+        subject: 'Rise of the Warrior - Your Android APK Build is Ready! ⚔️',
+        html: `
+      <div style="font-family: Arial, sans-serif; background-color: #13141C; color: #FFF; padding: 25px; border-radius: 10px;">
+        <h1 style="color: #00F0FF; text-align: center;">RISE OF THE WARRIOR</h1>
+        <h2 style="color: #FFF; text-align: center;">Android APK Build Notification</h2>
+        <p style="font-size: 16px; text-align: center; color: #A0A0B0;">
+          Your standalone Android APK build has been initiated on Expo EAS Cloud.
+        </p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${apkUrl || buildUrl}" style="background-color: #00F0FF; color: #13141C; padding: 14px 28px; text-decoration: none; font-weight: bold; border-radius: 6px; font-size: 16px;">
+            ${apkUrl ? 'Download Standalone APK' : 'View Live Build Progress & Download APK'}
+          </a>
+        </div>
+        <p style="font-size: 14px; color: #A0A0B0; text-align: center;">
+          Build Dashboard Link: <a href="${buildUrl}" style="color: #00F0FF;">${buildUrl}</a>
+        </p>
+        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;" />
+        <p style="font-size: 12px; color: #888; text-align: center;">Fitness Game Team</p>
+      </div>
+    `,
+    };
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Build email sent to ${to}`);
+        return true;
+    }
+    catch (error) {
+        console.error('Error sending build email:', error);
+        return false;
+    }
+};
 //# sourceMappingURL=emailService.js.map
